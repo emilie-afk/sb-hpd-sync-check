@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HPD — Not Yet in Shopify</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0; padding: 20px 24px;
+      background: #f8f9fa; color: #111827; min-height: 100vh;
+    }
+    .header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 20px; gap: 16px;
+    }
+    .header-left h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+    .meta { font-size: 12px; color: #6b7280; }
+    .refresh-btn {
+      flex-shrink: 0; background: #16a34a; color: white; border: none;
+      padding: 8px 18px; border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 500; transition: background .15s;
+    }
+    .refresh-btn:hover { background: #15803d; }
+    .refresh-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+    /* Loading */
+    .loading {
+      display: flex; align-items: center; gap: 10px;
+      color: #6b7280; font-size: 14px; padding: 40px 0;
+    }
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid #e5e7eb;
+      border-top-color: #16a34a; border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-box {
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
+      padding: 16px 20px; color: #991b1b; font-size: 14px;
+    }
+
+    /* Section label */
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; margin: 20px 0 8px; color: #374151;
+    }
+    .section-label.review { color: #b45309; }
+
+    /* Tables */
+    .table-wrap {
+      background: white; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .table-wrap.review {
+      box-shadow: 0 1px 4px rgba(180,83,9,.15);
+      border: 1px solid #fde68a;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #f9fafb; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em;
+      padding: 10px 16px; text-align: left; color: #6b7280;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .table-wrap.review thead th { background: #fffbeb; }
+    tbody tr:hover td { background: #f9fafb; }
+    td { padding: 10px 16px; font-size: 14px; border-bottom: 1px solid #f3f4f6; }
+    tbody tr:last-child td { border-bottom: none; }
+    .td-num  { color: #d1d5db; width: 36px; font-size: 13px; }
+    .td-name { font-weight: 500; color: #111827; }
+    .td-note { font-size: 12px; color: #92400e; }
+    .common  { color: #9ca3af; font-weight: 400; font-style: italic; font-size: 13px; }
+    .badge-review {
+      display: inline-block; background: #fef3c7; color: #92400e;
+      border: 1px solid #fde68a; border-radius: 4px;
+      font-size: 11px; font-weight: 600; padding: 1px 7px; margin-left: 8px;
+      vertical-align: middle;
+    }
+    .footer { margin-top: 10px; font-size: 12px; color: #9ca3af; text-align: right; }
+
+    /* Password gate */
+    #gate {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 80vh;
+    }
+    .gate-box {
+      background: white; border-radius: 16px; padding: 36px 40px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1); text-align: center; width: 320px;
+    }
+    .gate-box h2 { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+    .gate-box p  { font-size: 13px; color: #6b7280; margin: 0 0 20px; }
+    .gate-box input {
+      width: 100%; padding: 10px 14px; border: 1px solid #d1d5db;
+      border-radius: 8px; font-size: 14px; outline: none;
+      transition: border-color .15s;
+    }
+    .gate-box input:focus { border-color: #16a34a; }
+    .gate-box button {
+      margin-top: 12px; width: 100%; background: #16a34a; color: white;
+      border: none; padding: 10px; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    .gate-box button:hover { background: #15803d; }
+    .gate-error { color: #dc2626; font-size: 13px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- Password gate (shown before data loads) -->
+  <div id="gate">
+    <div class="gate-box">
+      <h2>🌿 HPD Dashboard</h2>
+      <p>Enter the password to continue</p>
+      <input type="password" id="pwInput" placeholder="Password"
+             onkeydown="if(event.key==='Enter') unlock()">
+      <button onclick="unlock()">Continue</button>
+      <div class="gate-error" id="gateError"></div>
+    </div>
+  </div>
+
+  <!-- Main app (hidden until password accepted) -->
+  <div id="app" style="display:none">
+    <div class="header">
+      <div class="header-left">
+        <h1>🌿 HPD — Not Yet in Shopify</h1>
+        <div class="meta" id="meta">Loading live data…</div>
+      </div>
+      <button class="refresh-btn" id="refreshBtn" onclick="load()" disabled>↻ Refresh</button>
+    </div>
+    <div id="content"></div>
+    <div class="footer" id="footer"></div>
+  </div>
+
+  <script>
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function render(data) {
+      var d = new Date(data.ts);
+      document.getElementById('meta').textContent =
+        data.count + ' product' + (data.count !== 1 ? 's' : '') + ' not yet synced' +
+        '  ·  Last refreshed ' + d.toLocaleDateString() + ' at ' + d.toLocaleTimeString();
+
+      var rows = (data.results || []).map(function(r, i) {
+        var title = r.commonName ? r.title.replace(/\s*\([^)]+\)\s*$/, '') : r.title;
+        var common = r.commonName ? ' <span class="common">(' + esc(r.commonName) + ')</span>' : '';
+        return '<tr><td class="td-num">' + (i+1) + '</td>' +
+          '<td class="td-name">' + esc(title) + common + '</td></tr>';
+      }).join('');
+
+      var reviewRows = (data.review || []).map(function(r, i) {
+        var title = r.commonName ? r.title.replace(/\s*\([^)]+\)\s*$/, '') : r.title;
+        var common = r.commonName ? ' <span class="common">(' + esc(r.commonName) + ')</span>' : '';
+        return '<tr><td class="td-num">' + (i+1) + '</td>' +
+          '<td class="td-name">' + esc(title) + common +
+          '<span class="badge-review">⚠ verify</span></td>' +
+          '<td class="td-note">' + esc(r.note || '') + '</td></tr>';
+      }).join('');
+
+      var html = '<div class="table-wrap"><table>' +
+        '<thead><tr><th>#</th><th>Product Name</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+
+      if (data.review && data.review.length) {
+        html += '<div class="section-label review">⚠️ Needs Review — found on Shopify but out of stock</div>' +
+          '<div class="table-wrap review"><table>' +
+          '<thead><tr><th>#</th><th>Product Name</th><th>Note</th></tr></thead>' +
+          '<tbody>' + reviewRows + '</tbody></table></div>';
+      }
+
+      document.getElementById('content').innerHTML = html;
+      document.getElementById('footer').textContent =
+        (data.stats.hpd || 0) + ' HPD products scanned  ·  ' +
+        (data.stats.inStockSkus || 0) + ' in-stock SKUs  ·  ' +
+        (data.stats.shopifyMapped || 0) + ' Shopify-mapped SKUs';
+    }
+
+    function showLoading() {
+      document.getElementById('content').innerHTML =
+        '<div class="loading"><div class="spinner"></div>Fetching live data from HPD &amp; Google Sheets…</div>';
+      document.getElementById('footer').textContent = '';
+      document.getElementById('meta').textContent = 'Loading…';
+      document.getElementById('refreshBtn').disabled = true;
+    }
+
+    function showError(msg) {
+      document.getElementById('content').innerHTML =
+        '<div class="error-box">⚠️ ' + esc(msg) + '</div>';
+      document.getElementById('refreshBtn').disabled = false;
+    }
+
+    async function load() {
+      showLoading();
+      try {
+        var res = await fetch('/.netlify/functions/check', {
+          headers: { 'x-site-password': sessionStorage.getItem('hpd_pw') || '' }
+        });
+        if (res.status === 401) {
+          // Password rejected — go back to gate
+          sessionStorage.removeItem('hpd_pw');
+          document.getElementById('app').style.display  = 'none';
+          document.getElementById('gate').style.display = 'flex';
+          document.getElementById('gateError').textContent = 'Incorrect password.';
+          return;
+        }
+        if (!res.ok) {
+          var err = await res.json().catch(() => ({ error: 'HTTP ' + res.status }));
+          throw new Error(err.error || 'HTTP ' + res.status);
+        }
+        var data = await res.json();
+        render(data);
+      } catch (e) {
+        showError(e.message || 'Unknown error — check Netlify function logs.');
+      } finally {
+        document.getElementById('refreshBtn').disabled = false;
+      }
+    }
+
+    function unlock() {
+      var pw = document.getElementById('pwInput').value.trim();
+      if (!pw) return;
+      sessionStorage.setItem('hpd_pw', pw);
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display  = 'block';
+      load();
+    }
+
+    // Auto-load if password already in session (e.g. after a hard refresh)
+    if (sessionStorage.getItem('hpd_pw')) {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display  = 'block';
+      load();
+    }
+  </script>
+</body>
+</html>

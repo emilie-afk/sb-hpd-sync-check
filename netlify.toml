@@ -1,0 +1,14 @@
+[build]
+  functions = "netlify/functions"
+  publish   = "."
+
+[functions]
+  # Give the check function extra time — it fetches HPD + 2 sheets + storefront checks
+  [functions.check]
+    timeout = 26
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
