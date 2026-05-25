@@ -1,0 +1,8 @@
+{
+  "name": "hpd-missing-products",
+  "version": "1.0.0",
+  "description": "Live dashboard — HPD products not yet synced to Shopify",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}
