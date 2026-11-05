@@ -1,8 +1,15 @@
 {
   "name": "hpd-missing-products",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "private": true,
   "description": "Live dashboard — HPD products not yet synced to Shopify",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "test:browser": "node tests/browser/browser-check.mjs"
+  },
   "dependencies": {
-    "node-fetch": "^2.7.0"
+    "@netlify/blobs": "11.1.4"
   }
 }

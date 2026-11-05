@@ -1,14 +1,36 @@
 [build]
+  # Only browser assets are published. Server code, tests and config are not.
+  publish   = "public"
   functions = "netlify/functions"
-  publish   = "."
 
 [functions]
-  # Give the check function extra time — it fetches HPD + 2 sheets + storefront checks
-  [functions.check]
-    timeout = 26
+  node_bundler = "esbuild"
+
+# The function timeout is set in the Netlify UI (Site configuration → Functions),
+# not here. Keep CHECK_BUDGET_MS a little below it (default 9000 ms for the 10 s default).
 
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options        = "SAMEORIGIN"
-    X-Content-Type-Options = "nosniff"
+    Content-Security-Policy = "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+    X-Frame-Options         = "DENY"
+    X-Content-Type-Options  = "nosniff"
+    Referrer-Policy         = "no-referrer"
+    X-Robots-Tag            = "noindex, nofollow"
+    Permissions-Policy      = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/app.js"
+  [headers.values]
+    Cache-Control = "no-cache"
