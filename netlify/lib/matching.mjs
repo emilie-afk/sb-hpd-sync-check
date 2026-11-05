@@ -97,14 +97,15 @@ export function parseInventory(values) {
   return map;
 }
 
-// Products Master rows (A:F, header first); D = HD SKU, F = Shopify flag
-export function parseReference(values) {
+// Products Master rows (header first). `cols` gives the 0-based positions of
+// the HD SKU and Shopify flag columns (originally D and F).
+export function parseReference(values, cols = { sku: 3, flag: 5 }) {
   const trueProdNames = new Set();
   const trueSizes     = Object.create(null);
 
   for (const row of (values || []).slice(1)) {
-    const hdSku = (row[3] || '').toString().trim().toUpperCase();
-    const flag  = (row[5] || '').toString().trim().toUpperCase();
+    const hdSku = (row[cols.sku] || '').toString().trim().toUpperCase();
+    const flag  = (row[cols.flag] || '').toString().trim().toUpperCase();
     if (!hdSku || flag !== 'TRUE') continue;
 
     const m = hdSku.match(/^(\d+)_(.+)$/);

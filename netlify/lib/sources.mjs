@@ -80,14 +80,35 @@ export async function fetchReferenceData(cfg, budget, warnings) {
     const name = sheet.properties.title;
     if (!validTabTitle(name)) throw new SourceError('reference', 'tab_invalid');
 
-    const url = `${SHEETS_API}/${cfg.referenceId}/values/${encodeURIComponent(name + '!A:F')}?key=${encodeURIComponent(cfg.apiKey)}`;
+    const url = `${SHEETS_API}/${cfg.referenceId}/values/${encodeURIComponent(name + '!' + REFERENCE_RANGE)}?key=${encodeURIComponent(cfg.apiKey)}`;
     const r = await getJson(url, { budget });
     if (!r.ok) throw new SourceError('reference', 'status', r.status);
     if (!r.data || typeof r.data !== 'object' || !isRows(r.data.values)) throw new SourceError('reference', 'bad_shape');
-    const ref = parseReference(r.data.values);
+    const cols = referenceColumns(r.data.values);
+    const ref = parseReference(r.data.values, cols);
     if (ref.trueProdNames.size === 0) warnings.push('reference_empty');
     return ref;
   });
+}
+
+// Products Master columns are found by their header (row 1), so inserting or
+// moving columns doesn't silently change what is read. A missing or
+// duplicated header is a source error: no comparison is produced.
+const REFERENCE_RANGE = 'A:AZ';
+export const REFERENCE_HEADERS = { sku: 'HD SKU', flag: 'Shopify Uploaded Listing' };
+const normHeader = (h) => String(h ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+export function referenceColumns(values) {
+  const header = Array.isArray(values) && Array.isArray(values[0]) ? values[0].map(normHeader) : [];
+  const cols = {};
+  for (const [k, name] of Object.entries(REFERENCE_HEADERS)) {
+    const want = normHeader(name);
+    const hits = header.reduce((a, h, i) => (h === want ? a.concat(i) : a), []);
+    if (hits.length === 0) throw new SourceError('reference', 'column_missing');
+    if (hits.length > 1) throw new SourceError('reference', 'column_ambiguous');
+    cols[k] = hits[0];
+  }
+  return cols;
 }
 
 // Google Sheets tab titles: non-empty, bounded, no control characters.

@@ -46,7 +46,7 @@ no build step, so nothing is written into the published files.
 | `GOOGLE_SHEETS_API_KEY` | yes | Google Sheets API key (restrict it to the Sheets API in Google Cloud) |
 | `HPD_INVENTORY_SHEET_ID` | yes | Spreadsheet ID of the HPD inventory sheet (tab `Inventory`, columns A:C) |
 | `PRODUCTS_MASTER_SHEET_ID` | yes | Spreadsheet ID of the Products Master sheet |
-| `PRODUCTS_MASTER_TAB_GID` | yes | Numeric `gid` of the Products Master tab (columns A:F) |
+| `PRODUCTS_MASTER_TAB_GID` | yes | Numeric `gid` of the Products Master tab. Its first row must contain the headers `HD SKU` and `Shopify Uploaded Listing` (each exactly once, any position) |
 | `SESSION_EPOCH` | no | Any string; change it to sign everyone out |
 | `SESSION_TTL_HOURS` | no | 1–168, default 12 |
 | `LOGIN_MAX_FAILURES_PER_IP` / `LOGIN_MAX_FAILURES_GLOBAL` / `LOGIN_WINDOW_MINUTES` | no | Defaults 10 / 100 / 15 |
