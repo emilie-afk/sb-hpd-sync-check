@@ -63,7 +63,7 @@ export function createUpstream(opts = {}) {
     }
     if (kind === 'sheets-reference') {
       const range = decodeURIComponent(u.pathname.split('/values/')[1]);
-      if (range !== `${data.tab}!A:F`) return json({ error: { message: 'Unable to parse range' } }, 400);
+      if (range !== `${data.tab}!A:AZ`) return json({ error: { message: 'Unable to parse range' } }, 400);
       return json({ values: data.reference });
     }
     if (kind === 'storefront') {

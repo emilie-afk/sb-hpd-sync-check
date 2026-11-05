@@ -87,10 +87,10 @@ export function inventoryValues() {
   ];
 }
 
-// Products Master values (A:F); col D = HD SKU, col F = Shopify flag
+// Products Master values; header row names the HD SKU and Shopify flag columns
 export function referenceValues() {
   return [
-    ['A', 'B', 'C', 'HD SKU', 'E', 'Shopify'],
+    ['No.', 'Plant Name', 'Size', 'HD SKU', 'E', 'Shopify Uploaded Listing'],
     ['', '', '', '6_MONSTERA_EXAMPLE', '', 'TRUE'],
     ['', '', '', '4_POTHOS_SAMPLE', '', 'TRUE'],
     ['', '', '', '6_POTHOS_SAMPLE', '', 'true'],

@@ -378,3 +378,47 @@ test('valid storefront data still classifies exactly as before', async () => {
   assert.equal(b.complete, true);
   assert.deepEqual(strip(b), golden.base.body);
 });
+
+// ── Products Master columns located by header ───────────────────────────────
+import { referenceValues } from './helpers/fixtures.mjs';
+
+function withInsertedColumns(rows, at, n) {
+  return rows.map((r, i) => { const c = r.slice(); c.splice(at, 0, ...Array.from({ length: n }, (_, j) => (i === 0 ? `Inserted ${j}` : ''))); return c; });
+}
+
+test('inserted columns (flag moved from F to G, like the live sheet) give identical results', async () => {
+  // Live layout: "Weight (oz)" and "Cost" inserted after HD SKU.
+  useUpstream({ reference: withInsertedColumns(referenceValues(), 4, 2) });
+  const cookie = await signIn(fns);
+  const b = await (await runCheck(cookie)).json();
+  assert.equal(b.complete, true);
+  assert.deepEqual(strip(b), golden.base.body);
+});
+
+test('columns moved left of HD SKU and header case/spacing differences still match', async () => {
+  const rows = withInsertedColumns(referenceValues(), 0, 3).map((r, i) => (i === 0 ? r.map(h => (h === 'Shopify Uploaded Listing' ? '  shopify   uploaded listing ' : h === 'HD SKU' ? 'hd sku' : h)) : r));
+  useUpstream({ reference: rows });
+  const cookie = await signIn(fns);
+  const b = await (await runCheck(cookie)).json();
+  assert.deepEqual(strip(b), golden.base.body);
+});
+
+for (const [label, mutate] of [
+  ['flag header missing', (h) => h.map(x => (x === 'Shopify Uploaded Listing' ? 'Shopify' : x))],
+  ['HD SKU header missing', (h) => h.map(x => (x === 'HD SKU' ? 'SKU' : x))],
+  ['duplicate flag header', (h) => h.concat(['Shopify Uploaded Listing'])],
+  ['no header row', () => null],
+]) {
+  test(`Products Master ${label} -> 502, no comparison`, async () => {
+    const ref = referenceValues();
+    const h = mutate(ref[0]);
+    const rows = h ? [h, ...ref.slice(1)] : [];
+    const up = useUpstream({ reference: rows });
+    const cookie = await signIn(fns);
+    const { r, lines } = await captureLogs(() => runCheck(cookie));
+    assert.equal(r.status, 502);
+    assert.match((await r.json()).error, /Products Master sheet\. No comparison was produced/);
+    assert.equal(up.calls.filter(c => c.kind === 'storefront').length, 0);
+    assert.ok(lines.some(l => /column_(missing|ambiguous)/.test(l)));
+  });
+}
