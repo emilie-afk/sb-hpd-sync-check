@@ -29,7 +29,7 @@ export function hpdProducts() {
     { title: 'Succulent Mix Tray', variants: [variant('4_SUCC_MIX')] },
     { title: 'Air Plant Bundle', variants: [variant('AIR_BUNDLE')] },
     // Title exclusion (case-insensitive)
-    { title: 'LED Flexible Grow Light', variants: [variant('LED_LIGHT')] },
+    { title: 'Synthetic Excluded Accessory', variants: [variant('SYN_EXCLUDED')] },
     // Out of stock in inventory -> skipped
     { title: 'Calathea Nowhere', variants: [variant('4_CALATHEA_NOWHERE')] },
     // Not in inventory at all -> skipped
@@ -68,7 +68,7 @@ export function inventoryValues() {
     ['8_POTHOS_SAMPLE', 'x', '7'],
     ['4_SUCC_MIX', 'x', '9'],
     ['AIR_BUNDLE', 'x', '9'],
-    ['LED_LIGHT', 'x', '9'],
+    ['SYN_EXCLUDED', 'x', '9'],
     ['4_CALATHEA_NOWHERE', 'x', '0'],
     ['4_ALOCASIA_SHOWN', 'x', '4'],
     ['4_ANTH_ROSY', 'x', '1'],
@@ -130,4 +130,5 @@ export const ENV = {
   HPD_INVENTORY_SHEET_ID: FAKE.inventoryId,
   PRODUCTS_MASTER_SHEET_ID: FAKE.referenceId,
   PRODUCTS_MASTER_TAB_GID: String(FAKE.referenceGid),
+  HPD_TITLE_EXCLUSIONS: JSON.stringify(['Synthetic Excluded Accessory']),
 };

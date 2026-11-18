@@ -42,6 +42,16 @@ export function loadAuthConfig(env = process.env) {
 
 const SHEET_ID_RE = /^[A-Za-z0-9_-]{20,128}$/;
 
+export function parseTitleExclusions(value) {
+  const v = String(value || '').trim();
+  if (!v) return new Set();
+  const list = JSON.parse(v);
+  if (!Array.isArray(list) || list.length > 500 || !list.every(t => typeof t === 'string' && t.length > 0 && t.length <= 300)) {
+    throw new Error('invalid');
+  }
+  return new Set(list.map(t => t.trim().toLowerCase()));
+}
+
 // Required only once a request is authenticated. Missing -> safe 503.
 export function loadSourceConfig(env = process.env) {
   const missing = [];
@@ -68,7 +78,17 @@ export function loadSourceConfig(env = process.env) {
     throw new ConfigError('source', e.missing || ['CHECK_*']);
   }
 
+  // Optional private list: exact product titles to skip (confirmed synced, handle mismatch).
+  // JSON array of strings; compared case-insensitively.
+  let titleExclusions;
+  try {
+    titleExclusions = parseTitleExclusions(env.HPD_TITLE_EXCLUSIONS);
+  } catch {
+    throw new ConfigError('source', ['HPD_TITLE_EXCLUSIONS']);
+  }
+
   return {
+    titleExclusions,
     apiKey,
     inventoryId,
     referenceId,

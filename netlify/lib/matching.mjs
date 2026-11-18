@@ -1,16 +1,9 @@
 // Product matching and classification. Logic moved unchanged from the original
 // netlify/functions/check.js; only I/O was separated out so it can be tested.
 
-// Products confirmed synced but not in the reference sheet
-// (storefront handles don't match the generated handle)
-export const TITLE_EXCLUSIONS = new Set([
-  'winter plant shipping protection',
-  'tillandsia air plants fertilizer - 2oz',
-  'led flexible grow light',
-  'disco ball hanging planter',
-  'peperomia rosso',           // Shopify handle is peperomia-rosso-1
-  'alocasia micholitziana \'frydek\'' // Confirmed synced via HPD Merchant app
-]);
+// Products confirmed synced but missing from the reference sheet (their storefront handles
+// don't match the generated handle) are skipped by exact title. The list is private
+// configuration (HPD_TITLE_EXCLUSIONS, see config.mjs) and is passed in by the caller.
 
 // Skip products whose title contains any of these
 export const SKIP_KEYWORDS = ['succulent', 'tillandsia', 'air plant', 'subscription', 'gift card'];
@@ -123,12 +116,12 @@ export function parseReference(values, cols = { sku: 3, flag: 5 }) {
 }
 
 // First pass: HPD products in stock but not covered by the reference sheet
-export function findUncovered(hpdProducts, inventoryMap, ref) {
+export function findUncovered(hpdProducts, inventoryMap, ref, titleExclusions = new Set()) {
   const uncovered = [];
   for (const product of hpdProducts) {
     const titleLower = product.title.toLowerCase();
     if (SKIP_KEYWORDS.some(kw => titleLower.includes(kw))) continue;
-    if (TITLE_EXCLUSIONS.has(titleLower)) continue;
+    if (titleExclusions.has(titleLower)) continue;
 
     const inStockVariants = (product.variants || []).filter(v => {
       const sku = (v.sku || '').trim().toUpperCase();

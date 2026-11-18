@@ -14,7 +14,7 @@ export async function runCheck(cfg) {
       fetchReferenceData(cfg, budget, warnings),
     ]);
 
-    const uncovered = findUncovered(hpdProducts, inventoryMap, ref);
+    const uncovered = findUncovered(hpdProducts, inventoryMap, ref, cfg.titleExclusions);
     const sfResults = await checkAllStorefronts(uncovered, budget);
     const { results, review, unverified } = classify(uncovered, sfResults);
     if (unverified.length) warnings.push('storefront_unverified');
